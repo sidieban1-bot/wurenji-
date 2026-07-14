@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>低空巡检工单与运营管理系统｜交互增强版</title>
+<style>
+:root{
+  --bg:#07111f;--bg2:#0b1730;--panel:rgba(255,255,255,.075);--panel2:rgba(255,255,255,.115);
+  --line:rgba(255,255,255,.14);--text:#e8f1ff;--muted:#93a7c7;--brand:#5eead4;--brand2:#60a5fa;
+  --gold:#facc15;--danger:#fb7185;--ok:#34d399;--warn:#f59e0b;--shadow:0 24px 70px rgba(0,0,0,.35);
+  --radius:24px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",Arial,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(96,165,250,.28), transparent 32%),
+    radial-gradient(circle at 86% 12%, rgba(94,234,212,.18), transparent 30%),
+    linear-gradient(135deg,var(--bg),var(--bg2) 50%,#050914);
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+.wrapper{width:min(1460px,94vw);margin:0 auto}
+.topbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(18px);background:rgba(7,17,31,.78);border-bottom:1px solid var(--line)}
+.nav{height:82px;min-height:82px;display:grid;grid-template-columns:310px minmax(0,1fr) 138px;align-items:center;gap:18px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.3px;min-width:0}
+.logo-mark{width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,var(--brand2),var(--brand));display:grid;place-items:center;color:#06101d;font-weight:900;box-shadow:0 10px 30px rgba(94,234,212,.25);flex:0 0 auto}
+.logo span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px;line-height:1.16}
+.navlinks{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:12px;min-width:0}
+.navlinks>a,.nav-trigger{display:inline-flex;align-items:center;gap:6px;padding:7px 6px;border-radius:12px;color:#cbd8ef;cursor:pointer;font-size:13px;white-space:nowrap;line-height:1.15;user-select:none}
+.navlinks>a:hover,.navlinks>a.active,.nav-trigger:hover,.nav-item:hover .nav-trigger{background:rgba(255,255,255,.08);color:#fff}
+.nav-trigger:after{content:"▾";font-size:11px;opacity:.78}
+.nav-item{position:relative;display:inline-flex;align-items:center}
+.dropdown-menu{position:absolute;left:0;top:calc(100% + 10px);min-width:360px;padding:10px;border:1px solid var(--line);border-radius:18px;background:rgba(7,17,31,.96);backdrop-filter:blur(18px);box-shadow:var(--shadow);opacity:0;transform:translateY(-8px);pointer-events:none;transition:.18s ease}
+.nav-item:hover .dropdown-menu,.nav-item:focus-within .dropdown-menu{opacity:1;transform:translateY(0);pointer-events:auto}
+.dropdown-menu a{display:grid;grid-template-columns:112px 1fr;column-gap:14px;align-items:center;padding:11px 12px;border-radius:13px;color:#d6e4fa;white-space:nowrap;font-size:14px}
+.dropdown-menu a:hover{background:rgba(255,255,255,.09);color:#fff}.dropdown-menu a small{justify-self:end;color:var(--brand);font-size:11px;font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.08);color:#fff;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.18);cursor:pointer}
+.btn.primary{background:linear-gradient(135deg,var(--brand2),var(--brand));color:#06101d;border:0}.btn:hover{transform:translateY(-1px)}
+.topbar .btn.primary{width:132px;max-width:132px;min-width:132px;font-size:13px;line-height:1.12;white-space:normal;text-align:center;padding:11px 12px}
+.page{display:none}.page.active{display:block}
+.hero{padding:82px 0 44px}.hero-grid{display:grid;grid-template-columns:1fr .9fr;gap:46px;align-items:center}
+.kicker{color:var(--brand);font-weight:900;letter-spacing:.12em;font-size:13px;text-transform:uppercase}
+h1{font-size:52px;line-height:1.12;margin:16px 0 18px;letter-spacing:-1.2px}
+h2{font-size:34px;line-height:1.22;margin:0 0 16px;letter-spacing:-.5px}
+h3{font-size:20px;margin:0 0 10px}
+p{color:#bdd0ed;line-height:1.82;margin:0 0 14px}.lead{font-size:18px;max-width:780px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:24px}
+.hero-card{position:relative;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.055));border-radius:32px;padding:22px;box-shadow:var(--shadow)}
+.hero-card:before{content:"";position:absolute;inset:-60px -90px auto auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(94,234,212,.36),transparent 62%)}
+.dashboard-mock{position:relative;z-index:1}.mock-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.dots{display:flex;gap:7px}.dots span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.25)}
+.status-pill{font-size:12px;color:#0b1528;background:var(--brand);padding:6px 10px;border-radius:999px;font-weight:900}
+.metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:14px 0}
+.metric{background:rgba(7,17,31,.58);border:1px solid var(--line);border-radius:18px;padding:15px}.metric .num{font-size:28px;font-weight:900}.metric .label{font-size:12px;color:var(--muted);margin-top:5px}
+.map-panel{margin-top:14px;height:250px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(90deg,rgba(96,165,250,.06) 1px,transparent 1px),linear-gradient(0deg,rgba(96,165,250,.06) 1px,transparent 1px),radial-gradient(circle at 30% 30%,rgba(94,234,212,.22),transparent 20%),radial-gradient(circle at 70% 62%,rgba(250,204,21,.18),transparent 18%),rgba(5,12,26,.82);background-size:28px 28px,28px 28px,100% 100%,100% 100%,100% 100%;position:relative;overflow:hidden}
+.route{position:absolute;height:2px;background:linear-gradient(90deg,transparent,var(--brand),transparent);transform-origin:left}.route.r1{width:210px;left:38px;top:76px;transform:rotate(23deg)}.route.r2{width:250px;left:110px;top:162px;transform:rotate(-18deg)}
+.drone{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 8px rgba(94,234,212,.12),0 0 35px rgba(94,234,212,.9)}.drone.d1{left:155px;top:112px}.drone.d2{left:315px;top:132px;background:var(--gold)}
+.section{padding:56px 0}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:22px;box-shadow:0 14px 40px rgba(0,0,0,.18)}.card:hover{background:var(--panel2)}
+.icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(96,165,250,.25),rgba(94,234,212,.18));border:1px solid var(--line);font-size:23px;margin-bottom:14px}
+.tag{display:inline-flex;padding:5px 9px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:#bcd3ef;margin:4px 5px 0 0}
+.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:22px}.flow .step{position:relative;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:18px;padding:16px;min-height:104px}.step .no{color:var(--brand);font-weight:900;font-size:13px}.step strong{display:block;margin:6px 0}
+.page-title{padding:42px 0 22px}.page-title h1{font-size:42px;margin-bottom:12px}
+.layout{display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start}.sidebar{position:sticky;top:102px;border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:24px;padding:16px}
+.side-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;color:#c7d7ef;margin-bottom:4px}.side-link:hover,.side-link.active{background:rgba(255,255,255,.1);color:#fff}
+.main-panel{display:grid;gap:18px}.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.kpi{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.055));border-radius:22px;padding:18px}.kpi .value{font-size:30px;font-weight:900;margin:8px 0 3px}.kpi small{color:var(--muted)}
+.table-card{overflow:hidden;border:1px solid var(--line);border-radius:24px;background:rgba(255,255,255,.07)}.table-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:15px 20px;border-bottom:1px solid rgba(255,255,255,.08)}th{color:#9fb2d0;font-weight:700;background:rgba(255,255,255,.035)}td{color:#dce8fa}tr:last-child td{border-bottom:0}
+.badge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:900}.badge.ok{background:rgba(52,211,153,.15);color:#7ff7c6}.badge.warn{background:rgba(245,158,11,.15);color:#ffd38a}.badge.danger{background:rgba(251,113,133,.15);color:#ffa2b2}.badge.info{background:rgba(96,165,250,.15);color:#a8cfff}
+.chart{height:230px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));padding:18px;display:flex;align-items:end;gap:12px}.bar{flex:1;border-radius:14px 14px 6px 6px;background:linear-gradient(180deg,var(--brand),var(--brand2));min-height:28px;position:relative;transition:.25s}.bar span{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}.form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.input,select,textarea{width:100%;padding:13px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(5,12,26,.55);color:#fff;outline:none;font-family:inherit}textarea{min-height:90px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}.toolbar .btn{padding:9px 13px;font-size:13px}.toolbar .btn.active{background:rgba(94,234,212,.18);border-color:rgba(94,234,212,.45);color:#dffdf8}
+.timeline{display:grid;gap:12px}.time-item{display:grid;grid-template-columns:80px 1fr;gap:14px;align-items:start}.time-item .time{color:var(--brand);font-weight:900}.time-item .box{border:1px solid var(--line);background:rgba(255,255,255,.065);border-radius:18px;padding:14px}
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.price-card{padding:26px;border:1px solid var(--line);background:rgba(255,255,255,.075);border-radius:28px;position:relative;overflow:hidden}.price-card.featured{border-color:rgba(94,234,212,.5);box-shadow:0 0 0 1px rgba(94,234,212,.15),var(--shadow)}.price{font-size:38px;font-weight:900;margin:14px 0}.price small{font-size:14px;color:var(--muted)}.check{margin:10px 0;color:#cfe0f7}.check:before{content:"✓";color:var(--brand);font-weight:900;margin-right:8px}
+.pain-hero{border:1px solid var(--line);background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.055));border-radius:32px;padding:30px;box-shadow:var(--shadow);position:relative;overflow:hidden}.pain-hero:before{content:"";position:absolute;right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(94,234,212,.28),transparent 64%)}.pain-hero>*{position:relative;z-index:1}
+.solution-map{display:grid;grid-template-columns:1fr 56px 1fr;gap:18px;align-items:stretch}.arrow-box{display:grid;place-items:center;color:var(--brand);font-size:28px;font-weight:900}
+.mapping-note,.example-box{border:1px solid rgba(94,234,212,.32);background:rgba(94,234,212,.08);border-radius:18px;padding:14px 16px;margin-top:16px;color:#dffdf8}.mapping-note strong,.example-box strong{color:var(--brand)}
+.module-list{display:grid;gap:12px}.module-item{border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:18px;padding:14px 16px}.module-item strong{display:block;margin-bottom:5px}
+.toast{position:fixed;right:26px;bottom:26px;z-index:99;background:rgba(7,17,31,.96);border:1px solid rgba(94,234,212,.38);box-shadow:var(--shadow);border-radius:18px;padding:14px 16px;color:#e8f1ff;opacity:0;transform:translateY(12px);pointer-events:none;transition:.24s}.toast.show{opacity:1;transform:translateY(0)}
+.footer{padding:42px 0 60px;border-top:1px solid var(--line);margin-top:54px;color:var(--muted)}.footer-grid{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+@media(max-width:1280px){.topbar .wrapper{width:min(1500px,96vw)}.nav{grid-template-columns:280px minmax(0,1fr) 126px;gap:10px}.logo span:last-child{font-size:14px}.navlinks{gap:7px}.navlinks>a,.nav-trigger{font-size:12px;padding:7px 4px}.topbar .btn.primary{width:122px;min-width:122px;max-width:122px;font-size:12px}}
+@media(max-width:1080px){.nav{height:auto;min-height:92px;grid-template-columns:1fr 126px;grid-template-areas:"logo action" "links links";padding:10px 0 12px;row-gap:8px}.logo{grid-area:logo}.topbar .btn.primary{grid-area:action}.navlinks{grid-area:links;justify-content:flex-start;overflow-x:auto;padding-bottom:2px}.navlinks::-webkit-scrollbar{height:0}}
+@media(max-width:980px){h1{font-size:42px}.hero-grid,.layout,.split,.solution-map{grid-template-columns:1fr}.sidebar{position:relative;top:auto}.grid-4,.kpi-row{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:repeat(2,1fr)}.pricing,.grid-3,.grid-2{grid-template-columns:1fr}.arrow-box{display:none}.dropdown-menu{position:static;opacity:1;transform:none;pointer-events:auto;margin:8px 0;background:rgba(255,255,255,.06)}}
+@media(max-width:640px){.grid-4,.kpi-row,.metric-grid,.form-row{grid-template-columns:1fr}h1{font-size:34px}.page-title h1{font-size:32px}th,td{padding:12px 10px;font-size:12px}.table-card{overflow-x:auto}}
+
+/* ===== clickable feature cards & child pages ===== */
+.feature-link{display:block;color:inherit}
+.feature-link .card{height:100%;position:relative;cursor:pointer;transition:.22s ease}
+.feature-link .card:after{
+  content:"点击进入子界面";
+  position:absolute;right:18px;bottom:16px;
+  font-size:12px;font-weight:800;color:var(--brand);
+  opacity:.9;
+}
+.feature-link .card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 18px 44px rgba(0,0,0,.24);
+  border-color:rgba(94,234,212,.38);
+}
+.child-topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  margin-bottom:18px
+}
+.breadcrumb{
+  color:var(--muted);font-size:13px
+}
+.preview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.preview-card{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.055);
+  border-radius:20px;
+  padding:16px
+}
+.mock-thumb{
+  height:128px;border-radius:16px;border:1px solid var(--line);
+  background:
+    radial-gradient(circle at 24% 26%, rgba(94,234,212,.18), transparent 28%),
+    radial-gradient(circle at 74% 62%, rgba(96,165,250,.14), transparent 28%),
+    linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  margin-bottom:12px;position:relative;overflow:hidden
+}
+.mock-thumb:after{
+  content:"";
+  position:absolute;left:16px;right:16px;bottom:16px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--brand),transparent)
+}
+.list-lite{display:grid;gap:10px}
+.list-lite .item{
+  border:1px solid var(--line);background:rgba(255,255,255,.045);
+  border-radius:16px;padding:12px 14px
+}
+@media(max-width:980px){.preview-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrapper nav">
+    <a class="logo" href="#home"><span class="logo-mark">低</span><span>低空巡检工单与运营管理系统</span></a>
+    <nav class="navlinks">
+      <a href="#home">首页</a>
+      <div class="nav-item"><span class="nav-trigger">四大痛点</span><div class="dropdown-menu">
+        <a href="#pain1"><span>作业无闭环</span><small>对应：任务台账 + 隐患工单</small></a>
+        <a href="#pain2"><span>资源严重浪费</span><small>对应：资源池</small></a>
+        <a href="#pain3"><span>数据孤岛</span><small>对应：数据档案</small></a>
+        <a href="#pain4"><span>管理无量化</span><small>对应：运营总览 + 效能报表</small></a>
+      </div></div>
+      <a href="#dashboard">运营总览</a>
+      <a href="#tasks">任务台账</a>
+      <a href="#hazards">隐患工单</a>
+      <a href="#resources">资源池</a>
+      <a href="#data">数据档案</a>
+      <a href="#reports">效能报表</a>
+      <a href="#pricing">试点定价</a>
+    </nav>
+    <a class="btn primary" href="#dashboard">进入演示系统</a>
+  </div>
+</header>
+
+<section id="home" class="page active">
+<main>
+  <section class="hero wrapper">
+    <div class="hero-grid">
+      <div>
+        <div class="kicker">INTERACTIVE PROTOTYPE / SINGLE HTML</div>
+        <h1>让低空巡检从“飞过了”变成“管起来了”</h1>
+        <p class="lead">这不是无人机硬件，也不是飞控平台，而是一套面向城市低空巡检的工单与运营管理系统。它把任务、隐患、资源、数据和报表沉淀为可操作的业务对象。</p>
+        <div class="example-box"><strong>本版新增：</strong>每个页面都加入了可点击筛选、模拟新建、状态更新、报告生成或预算测算，并在页面底部加入具体业务例子，避免只像展示花瓶。</div>
+        <div class="hero-actions"><a class="btn primary" href="#dashboard">查看产品原型</a><a class="btn" href="#pain1">查看四大痛点</a></div>
+        <div style="margin-top:22px"><span class="tag">巡检任务单</span><span class="tag">隐患工单</span><span class="tag">资源池</span><span class="tag">数据档案</span><span class="tag">效能报表</span></div>
+      </div>
+      <div class="hero-card">
+        <div class="dashboard-mock">
+          <div class="mock-top"><div class="dots"><span></span><span></span><span></span></div><div class="status-pill">实时运行中</div></div>
+          <div class="metric-grid">
+            <div class="metric"><div class="num">128</div><div class="label">本月巡检任务</div></div>
+            <div class="metric"><div class="num">94%</div><div class="label">整改闭环率</div></div>
+            <div class="metric"><div class="num">18</div><div class="label">待复查隐患</div></div>
+            <div class="metric"><div class="num">76%</div><div class="label">设备利用率</div></div>
+          </div>
+          <div class="map-panel"><div class="route r1"></div><div class="route r2"></div><div class="drone d1"></div><div class="drone d2"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section wrapper">
+    <div class="kicker">CORE PAINS</div><h2>四大痛点，对应四类可操作功能</h2>
+    <div class="grid-4">
+      <div class="card"><div class="icon">🔁</div><h3>作业无闭环</h3><p>上报、整改、复查脱节。</p><span class="tag">任务台账</span><span class="tag">隐患工单</span><br><br><a class="btn" href="#pain1">查看子页面</a></div>
+      <div class="card"><div class="icon">🚁</div><h3>资源严重浪费</h3><p>重复采购、设备闲置、航线重复。</p><span class="tag">资源池</span><br><br><a class="btn" href="#pain2">查看子页面</a></div>
+      <div class="card"><div class="icon">🗂️</div><h3>数据孤岛</h3><p>照片、台账、日志无法共享复用。</p><span class="tag">数据档案</span><br><br><a class="btn" href="#pain3">查看子页面</a></div>
+      <div class="card"><div class="icon">📈</div><h3>管理无量化</h3><p>治理成效靠人工汇报。</p><span class="tag">运营总览</span><span class="tag">效能报表</span><br><br><a class="btn" href="#pain4">查看子页面</a></div>
+    </div>
+  </section>
+</main>
+</section>
+
+<section id="pain1" class="page">
+  <main class="wrapper">
+    <section class="page-title"><div class="kicker">PAIN POINT 01</div><h1>🔁 作业无闭环</h1><p>隐患上报、整改、复查脱节，漏检与整改超期严重。</p><div class="mapping-note"><strong>对应后续界面：</strong>任务台账 + 隐患工单。前者记录每次巡检，后者负责隐患整改与复查销号。</div></section>
+    <section class="pain-hero"><div class="solution-map"><div><div class="kicker">痛点</div><h2>巡检发现问题后，没有稳定闭环</h2><p>过去依靠微信群、电话、人工表格流转，容易出现责任不清、整改超期、复查缺失。</p></div><div class="arrow-box">→</div><div><div class="kicker">系统动作</div><h2>任务单 + 工单 + 销号记录</h2><p>每个任务有编号，每个隐患有责任人，每次复查有证据。</p></div></div></section>
+    <section class="section grid-3"><div class="card"><h3>巡检任务单</h3><p>任务编号、巡检区域、航线、飞手、无人机、任务状态。</p></div><div class="card"><h3>隐患工单</h3><p>隐患类型、位置、风险等级、责任方、整改期限。</p></div><div class="card"><h3>复查销号</h3><p>上传复查材料，系统记录销号时间与处理结果。</p></div></section>
+    <section class="section"><div class="card"><h2>例子：河道漂浮物处置闭环</h2><p>系统生成“河道巡检 LX-2026-0714-001”，飞手上传照片后转为“隐患工单 HY-2026-051”，责任方为水务运维，整改期限 24 小时。整改后上传复查照片，系统自动把工单状态改为“已销号”。</p><div class="hero-actions"><a class="btn primary" href="#tasks">对应界面：任务台账</a><a class="btn" href="#hazards">对应界面：隐患工单</a></div></div></section>
+  </main>
+</section>
+
+<section id="pain2" class="page">
+  <main class="wrapper">
+    <section class="page-title"><div class="kicker">PAIN POINT 02</div><h1>🚁 资源严重浪费</h1><p>各部门各自买无人机，航线重复、设备闲置，综合利用率低。</p><div class="mapping-note"><strong>对应后续界面：</strong>资源池。统一管理无人机、飞手和航线，先让资源可视，再做调度。</div></section>
+    <section class="pain-hero"><div class="solution-map"><div><div class="kicker">痛点</div><h2>资源分散在部门内部</h2><p>不知道哪些无人机可用、哪些飞手空闲、哪些航线已经重复巡检。</p></div><div class="arrow-box">→</div><div><div class="kicker">系统动作</div><h2>无人机 / 飞手 / 航线资源池</h2><p>资源登记、状态可视、任务匹配、利用率统计。</p></div></div></section>
+    <section class="section grid-3"><div class="card"><h3>无人机资源表</h3><p>型号、续航、所属部门、状态、使用频次。</p></div><div class="card"><h3>飞手排班表</h3><p>飞手资质、可执行场景、任务负荷、当前排班。</p></div><div class="card"><h3>航线模板库</h3><p>沉淀高频路线，减少重复规划和重复飞行。</p></div></section>
+    <section class="section"><div class="card"><h2>例子：园区闲置无人机跨场景调用</h2><p>系统发现园区 DJ-12 本月仅执行 5 次任务，而河道巡检当日缺少可用设备。管理员可在资源池中把 DJ-12 临时分配给河道 HD-04 航线，系统记录跨场景调用次数和设备利用率变化。</p><div class="hero-actions"><a class="btn primary" href="#resources">对应界面：资源池</a><a class="btn" href="#dashboard">关联界面：运营总览</a></div></div></section>
+  </main>
+</section>
+
+<section id="pain3" class="page">
+  <main class="wrapper">
+    <section class="page-title"><div class="kicker">PAIN POINT 03</div><h1>🗂️ 数据孤岛</h1><p>各部门数据格式不统一，巡检照片、台账无法共享，数据无法复用。</p><div class="mapping-note"><strong>对应后续界面：</strong>数据档案。把照片、视频、轨迹、日志、工单和复查记录统一归档。</div></section>
+    <section class="pain-hero"><div class="solution-map"><div><div class="kicker">痛点</div><h2>数据多，但无法复盘</h2><p>照片在手机里、台账在 Excel 里、轨迹在飞控平台里，难以统一查询。</p></div><div class="arrow-box">→</div><div><div class="kicker">系统动作</div><h2>按任务编号与工单编号归档</h2><p>影像、轨迹、日志、整改记录统一进入档案包。</p></div></div></section>
+    <section class="section grid-3"><div class="card"><h3>影像资料</h3><p>照片、视频、现场取证材料。</p></div><div class="card"><h3>空间位置</h3><p>轨迹、隐患点位、区域网格。</p></div><div class="card"><h3>业务台账</h3><p>任务单、隐患单、整改记录、复查记录。</p></div></section>
+    <section class="section"><div class="card"><h2>例子：月度河道巡检档案包</h2><p>7 月河道巡检共形成 28 个任务包，系统将 860 张照片、42 段视频、28 条轨迹、37 条隐患工单统一打包，生成“河道巡检 7 月归档包”，后续可直接用于复盘和汇报。</p><div class="hero-actions"><a class="btn primary" href="#data">对应界面：数据档案</a><a class="btn" href="#reports">关联界面：效能报表</a></div></div></section>
+  </main>
+</section>
+
+<section id="pain4" class="page">
+  <main class="wrapper">
+    <section class="page-title"><div class="kicker">PAIN POINT 04</div><h1>📈 管理无量化</h1><p>没有统一考核指标，治理成效全靠人工汇报，预算、绩效无数据支撑。</p><div class="mapping-note"><strong>对应后续界面：</strong>运营总览 + 效能报表。前者看实时运行，后者输出月度指标与汇报材料。</div></section>
+    <section class="pain-hero"><div class="solution-map"><div><div class="kicker">痛点</div><h2>飞了多少次，不等于治理效果清楚</h2><p>只统计飞行次数和照片数量，无法证明隐患是否真的整改、资源是否节省。</p></div><div class="arrow-box">→</div><div><div class="kicker">系统动作</div><h2>KPI 看板 + 月度运营报告</h2><p>将任务、工单、资源和档案数据转化为指标。</p></div></div></section>
+    <section class="section grid-3"><div class="card"><h3>运营总览</h3><p>今日任务、待整改隐患、整改闭环率、设备利用率。</p></div><div class="card"><h3>指标库</h3><p>任务完成率、超期率、平均处置时长、飞手负荷。</p></div><div class="card"><h3>月度报告</h3><p>自动生成巡检运营报告，支撑绩效、预算和复盘。</p></div></section>
+    <section class="section"><div class="card"><h2>例子：月度绩效汇报</h2><p>系统自动汇总 7 月巡检情况：任务完成率 96%，整改闭环率 94%，平均处置时长 2.8 天，设备利用率 76%。这些数据可以直接进入绩效考核、预算申请和管理复盘。</p><div class="hero-actions"><a class="btn primary" href="#dashboard">对应界面：运营总览</a><a class="btn" href="#reports">对应界面：效能报表</a></div></div></section>
+  </main>
+</section>
+
+<section id="dashboard" class="page">
+<main class="wrapper">
+  <section class="page-title"><div class="kicker">DASHBOARD</div><h1>运营总览</h1><p>管理者一眼看到今天有没有巡、隐患有没有改、设备有没有闲置、结果能不能汇报。</p></section>
+  <div class="layout">
+    <aside class="sidebar"><a class="side-link active" href="#dashboard">📊 运营总览</a><a class="side-link" href="#tasks">🧾 巡检任务台账</a><a class="side-link" href="#hazards">⚠️ 隐患工单管理</a><a class="side-link" href="#resources">🚁 资源池管理</a><a class="side-link" href="#data">🗂️ 数据档案库</a><a class="side-link" href="#reports">📈 效能报表</a></aside>
+    <section class="main-panel">
+      <div class="toolbar"><button class="btn active" onclick="setDashboard('today',this)">今日</button><button class="btn" onclick="setDashboard('week',this)">本周</button><button class="btn" onclick="setDashboard('month',this)">本月</button><button class="btn" onclick="exportDaily()">导出当前摘要</button></div>
+      <div class="kpi-row"><div class="kpi"><small id="dashLabel1">今日任务</small><div class="value" id="dashTasks">18</div><small id="dashSub1">其中 14 项已完成</small></div><div class="kpi"><small>待整改隐患</small><div class="value" id="dashHazards">27</div><small id="dashSub2">超期 3 项</small></div><div class="kpi"><small>整改闭环率</small><div class="value" id="dashClose">94%</div><small>较上月 +11%</small></div><div class="kpi"><small>设备利用率</small><div class="value" id="dashUse">76%</div><small>闲置设备 4 架</small></div></div>
+      <div class="split"><div class="card"><h3>任务趋势</h3><div class="chart" id="dashChart"><div class="bar" style="height:45%"><span>周一</span></div><div class="bar" style="height:65%"><span>周二</span></div><div class="bar" style="height:52%"><span>周三</span></div><div class="bar" style="height:78%"><span>周四</span></div><div class="bar" style="height:88%"><span>周五</span></div><div class="bar" style="height:56%"><span>周六</span></div></div></div><div class="card"><h3>今日运行动态</h3><div class="timeline" id="dashTimeline"><div class="time-item"><div class="time">09:20</div><div class="box">河道巡检 LX-073 已完成，发现漂浮物 2 处。</div></div><div class="time-item"><div class="time">10:45</div><div class="box">园区安防任务进入复查阶段，责任人已上传整改照片。</div></div><div class="time-item"><div class="time">14:10</div><div class="box">市容巡检新增超期提醒：HY-2026-051。</div></div></div></div></div>
+      <div class="example-box"><strong>页面底部例子：</strong>区县管理者在早上 9 点打开运营总览，发现“河道漂浮物”工单已超期，点击摘要导出后可把今日任务、超期清单和设备利用率直接发给负责人。</div>
+    </section>
+  </div>
+</main>
+</section>
+
+<section id="tasks" class="page">
+<main class="wrapper"><section class="page-title"><div class="kicker">TASK LEDGER</div><h1>巡检任务台账</h1><p>每一次飞行都变成可追踪、可复盘、可归档的巡检任务单。</p></section><div class="main-panel">
+<div class="card"><h3>新建巡检任务单</h3><div class="form-row"><input class="input" id="taskName" value="河道巡检｜北岸 3 公里"><select id="taskScene"><option>河道监测</option><option>市容治理</option><option>园区安防</option><option>工地扬尘</option></select><input class="input" id="taskPilot" value="张航"><input class="input" id="taskRoute" value="HD-04"></div><div style="margin-top:14px"><button class="btn primary" onclick="createTask()">生成任务单</button><button class="btn" onclick="filterTask('全部',this)">全部</button><button class="btn" onclick="filterTask('执行中',this)">执行中</button><button class="btn" onclick="filterTask('待执行',this)">待执行</button><button class="btn" onclick="filterTask('已完成',this)">已完成</button></div></div>
+<div class="table-card"><div class="table-head"><h3>任务台账列表</h3><span class="tag">任务下发 → 执行 → 归档</span></div><table><thead><tr><th>任务编号</th><th>巡检场景</th><th>区域/航线</th><th>飞手</th><th>无人机</th><th>状态</th><th>隐患数</th></tr></thead><tbody id="taskBody"><tr data-status="已完成"><td>LX-2026-0714-001</td><td>河道监测</td><td>北岸 HD-04</td><td>张航</td><td>DJ-07</td><td><span class="badge ok">已完成</span></td><td>2</td></tr><tr data-status="执行中"><td>LX-2026-0714-002</td><td>市容治理</td><td>人民路 SR-02</td><td>李舟</td><td>DJ-03</td><td><span class="badge info">执行中</span></td><td>--</td></tr><tr data-status="待执行"><td>LX-2026-0714-003</td><td>园区安防</td><td>A 区 YQ-01</td><td>王铭</td><td>DJ-12</td><td><span class="badge warn">待执行</span></td><td>--</td></tr></tbody></table></div>
+<div class="example-box"><strong>页面底部例子：</strong>管理员新建“河道巡检｜北岸 3 公里”任务后，系统自动生成任务编号、分配飞手和航线；若飞行后发现漂浮物，任务会自动关联到隐患工单。</div>
+</div></main>
+</section>
+
+<section id="hazards" class="page">
+<main class="wrapper"><section class="page-title"><div class="kicker">HAZARD TICKETS</div><h1>隐患工单管理</h1><p>把现场照片变成有编号、有责任、有期限、有复查结果的隐患工单。</p></section><div class="main-panel">
+<div class="kpi-row"><div class="kpi"><small>本月隐患</small><div class="value" id="hazAll">86</div><small>较上月 -8%</small></div><div class="kpi"><small>待派发</small><div class="value">9</div><small>需确认责任部门</small></div><div class="kpi"><small>超期工单</small><div class="value" id="hazLate">3</div><small>已触发提醒</small></div><div class="kpi"><small>复查通过</small><div class="value" id="hazDone">64</div><small>自动归档</small></div></div>
+<div class="card"><h3>新增隐患工单</h3><div class="form-row"><input class="input" id="hazType" value="河道漂浮物"><input class="input" id="hazPlace" value="北岸 1.8km"><select id="hazLevel"><option>一般</option><option selected>较重</option><option>严重</option></select><input class="input" id="hazOwner" value="水务运维"></div><div style="margin-top:14px"><button class="btn primary" onclick="createHazard()">生成隐患工单</button><button class="btn" onclick="filterHazard('全部')">全部</button><button class="btn" onclick="filterHazard('已超期')">已超期</button><button class="btn" onclick="filterHazard('待复查')">待复查</button><button class="btn" onclick="closeFirstHazard()">模拟复查销号</button></div></div>
+<div class="table-card"><div class="table-head"><h3>隐患工单台账</h3><span class="tag">发现 → 派发 → 整改 → 复查 → 销号</span></div><table><thead><tr><th>工单编号</th><th>隐患类型</th><th>位置</th><th>风险等级</th><th>责任方</th><th>状态</th><th>截止</th></tr></thead><tbody id="hazBody"><tr data-status="已超期"><td>HY-2026-051</td><td>河道漂浮物</td><td>北岸 1.8km</td><td><span class="badge warn">较重</span></td><td>水务运维</td><td><span class="badge danger">已超期</span></td><td>07-13</td></tr><tr data-status="待复查"><td>HY-2026-052</td><td>疑似违建</td><td>人民路东段</td><td><span class="badge danger">严重</span></td><td>城管二队</td><td><span class="badge warn">待复查</span></td><td>07-14</td></tr></tbody></table></div>
+<div class="example-box"><strong>页面底部例子：</strong>飞手上传“疑似违建”照片后，系统生成 HY-2026-052 工单并派给城管二队。整改完成后点“模拟复查销号”，工单状态会变为已销号，进入数据档案。</div>
+</div></main>
+</section>
+
+<section id="resources" class="page">
+<main class="wrapper"><section class="page-title"><div class="kicker">RESOURCE POOL</div><h1>资源池管理</h1><p>把分散的无人机、飞手、航线和机巢变成可调度、可统计、可复盘的资源池。</p></section><div class="main-panel">
+<div class="grid-3">
+<a class="feature-link" href="#resource-drones"><div class="card"><div class="icon">🚁</div><h3>无人机资源表</h3><p>型号、续航、载荷、所属部门、状态、使用频次。</p></div></a>
+<a class="feature-link" href="#resource-pilots"><div class="card"><div class="icon">🧑‍✈️</div><h3>飞手排班表</h3><p>资质等级、可执行场景、任务负荷、历史完成率。</p></div></a>
+<a class="feature-link" href="#resource-routes"><div class="card"><div class="icon">🛣️</div><h3>航线模板库</h3><p>适用场景、风险等级、审批要求、最近执行时间。</p></div></a>
+</div>
+<div class="toolbar"><button class="btn active" onclick="filterResource('全部',this)">全部</button><button class="btn" onclick="filterResource('可用',this)">可用</button><button class="btn" onclick="filterResource('执行中',this)">执行中</button><button class="btn" onclick="filterResource('维修中',this)">维修中</button><button class="btn primary" onclick="allocateResource()">智能匹配河道任务</button></div>
+<div class="table-card"><div class="table-head"><h3>无人机资源状态</h3><span class="tag" id="resourceTag">综合利用率 76%</span></div><table><thead><tr><th>设备编号</th><th>型号</th><th>所属部门</th><th>续航</th><th>状态</th><th>本月任务</th><th>建议</th></tr></thead><tbody id="resBody"><tr data-status="执行中"><td>DJ-03</td><td>M30</td><td>城管</td><td>38min</td><td><span class="badge info">执行中</span></td><td>21</td><td>保持调度</td></tr><tr data-status="可用"><td>DJ-07</td><td>M3E</td><td>水务</td><td>42min</td><td><span class="badge ok">可用</span></td><td>16</td><td>优先河道任务</td></tr><tr data-status="可用"><td>DJ-12</td><td>巡检版</td><td>园区</td><td>35min</td><td><span class="badge ok">可用</span></td><td>5</td><td>存在闲置，可跨场景调用</td></tr><tr data-status="维修中"><td>DJ-16</td><td>旧款巡检机</td><td>环保</td><td>26min</td><td><span class="badge warn">维修中</span></td><td>2</td><td>建议维修或淘汰</td></tr></tbody></table></div>
+<div class="example-box"><strong>页面底部例子：</strong>河道突发巡检缺少设备时，系统发现园区 DJ-12 处于可用且任务量低，点击“智能匹配河道任务”后会给出跨部门调用建议。</div>
+</div></main>
+</section>
+
+<section id="data" class="page">
+<main class="wrapper"><section class="page-title"><div class="kicker">DATA ARCHIVE</div><h1>巡检数据档案库</h1><p>把照片、视频、轨迹、日志、工单和复查记录统一归档。</p></section><div class="main-panel">
+<div class="grid-4">
+<a class="feature-link" href="#data-media"><div class="card"><div class="icon">📷</div><h3>影像资料</h3><p>照片、视频、现场取证材料。</p></div></a>
+<a class="feature-link" href="#data-location"><div class="card"><div class="icon">📍</div><h3>空间位置</h3><p>轨迹、隐患点位、区域网格。</p></div></a>
+<a class="feature-link" href="#data-ledger"><div class="card"><div class="icon">📄</div><h3>业务台账</h3><p>任务单、隐患单、整改记录。</p></div></a>
+<a class="feature-link" href="#data-package"><div class="card"><div class="icon">🧾</div><h3>归档包</h3><p>按月导出完整档案。</p></div></a>
+</div>
+<div class="card"><h3>模拟资料归档</h3><div class="form-row"><input class="input" id="archiveTask" value="LX-2026-0714-001"><select id="archiveType"><option>河道巡检包</option><option>市容治理包</option><option>园区安防包</option></select><input class="input" id="archiveFiles" value="照片 36 张 / 视频 2 段"><input class="input" id="archiveRate" value="完整率 98%"></div><div style="margin-top:14px"><button class="btn primary" onclick="createArchive()">生成档案包</button></div></div>
+<div class="table-card"><div class="table-head"><h3>数据档案列表</h3><span class="tag">统一命名 / 统一字段 / 统一归档</span></div><table><thead><tr><th>档案编号</th><th>关联任务</th><th>资料类型</th><th>文件数</th><th>完整率</th><th>归档状态</th></tr></thead><tbody id="archiveBody"><tr><td>DA-2026-0714-001</td><td>LX-2026-0714-001</td><td>河道巡检包</td><td>36</td><td>98%</td><td><span class="badge ok">已归档</span></td></tr></tbody></table></div>
+<div class="example-box"><strong>页面底部例子：</strong>一条河道巡检任务完成后，系统把飞行轨迹、漂浮物照片、HY-2026-051 工单、整改照片和复查记录归入同一个档案包，后续不需要人工翻微信群找证据。</div>
+</div></main>
+</section>
+
+<section id="reports" class="page">
+<main class="wrapper"><section class="page-title"><div class="kicker">PERFORMANCE REPORT</div><h1>效能报表</h1><p>把治理成效变成自动生成、可追溯、可对比的量化运营报告。</p></section><div class="main-panel">
+<div class="toolbar"><button class="btn active" onclick="setReport('本月',this)">本月</button><button class="btn" onclick="setReport('本季度',this)">本季度</button><button class="btn" onclick="setReport('试点三个月',this)">试点三个月</button><button class="btn primary" onclick="generateReport()">生成报告摘要</button></div>
+<div class="kpi-row"><div class="kpi"><small>任务完成率</small><div class="value" id="repTask">96%</div><small>本月 128/133</small></div><div class="kpi"><small>整改闭环率</small><div class="value" id="repClose">94%</div><small>超期率下降</small></div><div class="kpi"><small>平均处置时长</small><div class="value" id="repTime">2.8天</div><small>较传统模式缩短</small></div><div class="kpi"><small>设备利用率</small><div class="value" id="repUse">76%</div><small>闲置率可追踪</small></div></div>
+<div class="split"><div class="card"><h3>隐患类型分布</h3><div class="chart" id="reportChart"><div class="bar" style="height:80%"><span>市容</span></div><div class="bar" style="height:55%"><span>河道</span></div><div class="bar" style="height:65%"><span>园区</span></div><div class="bar" style="height:38%"><span>工地</span></div><div class="bar" style="height:28%"><span>应急</span></div></div></div><div class="card"><h3>报告摘要</h3><p id="reportText">点击“生成报告摘要”，系统会根据当前周期自动生成可复制的汇报文字。</p></div></div>
+<div class="example-box"><strong>页面底部例子：</strong>试点结束后，系统可自动生成“任务完成率、隐患闭环率、平均处置时长、设备利用率”四项核心指标，用于说明平台是否真正改善了巡检管理。</div>
+</div></main>
+</section>
+
+<section id="pricing" class="page">
+<main class="wrapper"><section class="page-title"><div class="kicker">PILOT & BUSINESS MODEL</div><h1>试点方案与商业模型测试</h1><p>先用最小可行产品验证需求，再根据客户类型扩展功能和付费模式。</p></section><div class="main-panel">
+<div class="pricing"><div class="price-card"><h3>基础版</h3><p>适合小园区、第三方巡检团队。</p><div class="price">1-3万<small>/年</small></div><div class="check">巡检任务台账</div><div class="check">隐患工单</div><div class="check">基础报表</div></div><div class="price-card featured"><h3>专业版</h3><p>适合大型园区、区县级试点。</p><div class="price">5-15万<small>/年</small></div><div class="check">基础版全部功能</div><div class="check">资源池</div><div class="check">效能报表</div></div><div class="price-card"><h3>定制版</h3><p>适合政府、国企、总包单位。</p><div class="price">20-50万<small>/首年</small></div><div class="check">专业版全部功能</div><div class="check">私有化部署</div><div class="check">政务/飞控接口对接</div></div></div>
+<div class="card"><h3>商业模型测算器</h3><div class="form-row"><select id="clientType"><option value="2">小园区 / 第三方巡检团队</option><option value="8" selected>大型园区 / 区县级试点</option><option value="28">政府 / 国企 / 总包单位</option></select><select id="featureLevel"><option value="0">仅任务与工单</option><option value="4" selected>增加资源池与报表</option><option value="12">增加私有化与接口对接</option></select></div><div style="margin-top:14px"><button class="btn primary" onclick="calcPrice()">计算建议报价</button><span class="tag" id="priceResult">建议报价：12 万元左右</span></div></div>
+<div class="example-box"><strong>页面底部例子：</strong>明天做商业测试时，可以让被访者选择客户类型与功能需求，观察他们对 1-3 万、5-15 万、20 万以上三个价格区间的接受程度。</div>
+</div></main>
+</section>
+
+
+<section id="resource-drones" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">资源池管理 / 无人机资源表</div>
+        <div class="kicker">DRONE ASSETS</div>
+        <h1>无人机资源表子界面</h1>
+        <p>查看每架无人机的状态、续航、所属部门、维护记录和任务匹配建议。</p>
+      </div>
+      <a class="btn" href="#resources">返回资源池</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="kpi-row">
+      <div class="kpi"><small>在册无人机</small><div class="value">18</div><small>固定翼 2 / 多旋翼 16</small></div>
+      <div class="kpi"><small>当前可用</small><div class="value">11</div><small>可立即调度</small></div>
+      <div class="kpi"><small>执行中</small><div class="value">4</div><small>河道 2 / 市容 2</small></div>
+      <div class="kpi"><small>维修中</small><div class="value">3</div><small>需复检 1 架</small></div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><h3>设备明细</h3><span class="tag">状态 + 历史任务 + 维护提醒</span></div>
+      <table>
+        <thead><tr><th>设备编号</th><th>型号</th><th>载荷</th><th>续航</th><th>所属部门</th><th>状态</th><th>维护提醒</th><th>建议场景</th></tr></thead>
+        <tbody>
+          <tr><td>DJ-03</td><td>M30</td><td>可见光/热成像</td><td>38min</td><td>城管</td><td><span class="badge info">执行中</span></td><td>8 月电池校验</td><td>市容巡检</td></tr>
+          <tr><td>DJ-07</td><td>M3E</td><td>高清相机</td><td>42min</td><td>水务</td><td><span class="badge ok">可用</span></td><td>正常</td><td>河道巡检</td></tr>
+          <tr><td>DJ-12</td><td>巡检版</td><td>喊话器/探照灯</td><td>35min</td><td>园区</td><td><span class="badge ok">可用</span></td><td>正常</td><td>园区安防 / 应急</td></tr>
+          <tr><td>DJ-16</td><td>旧款巡检机</td><td>普通相机</td><td>26min</td><td>环保</td><td><span class="badge warn">维修中</span></td><td>建议评估淘汰</td><td>备用</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="preview-grid">
+      <div class="preview-card"><div class="mock-thumb"></div><h3>状态卡片</h3><p>点击设备可进入单机详情，查看本月飞行次数、累计时长、故障记录。</p></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>维护计划</h3><p>按照飞行时长和电池循环次数，自动提醒例行维护时间。</p></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>任务匹配建议</h3><p>根据场景、续航与载荷特征，推荐最合适的可用设备。</p></div>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>管理员点开 DJ-12 后，发现其本月任务量低、状态可用、载荷适合安防与应急巡检，因此系统建议在河道设备不足时跨部门调用。</div>
+  </div>
+</main>
+</section>
+
+<section id="resource-pilots" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">资源池管理 / 飞手排班表</div>
+        <div class="kicker">PILOT SCHEDULING</div>
+        <h1>飞手排班表子界面</h1>
+        <p>按资质、可执行场景、当前任务负荷和历史完成率安排飞手班次。</p>
+      </div>
+      <a class="btn" href="#resources">返回资源池</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="table-card">
+      <div class="table-head"><h3>飞手排班总表</h3><span class="tag">资质 + 班次 + 负荷</span></div>
+      <table>
+        <thead><tr><th>飞手</th><th>资质等级</th><th>可执行场景</th><th>本周任务数</th><th>今日排班</th><th>历史完成率</th><th>建议</th></tr></thead>
+        <tbody>
+          <tr><td>张航</td><td>A 级</td><td>河道 / 应急 / 市容</td><td>9</td><td>上午河道，下午应急待命</td><td>98%</td><td>保留核心任务</td></tr>
+          <tr><td>李舟</td><td>B 级</td><td>市容 / 园区</td><td>6</td><td>人民路市容巡检</td><td>95%</td><td>可补充园区夜间任务</td></tr>
+          <tr><td>王策</td><td>B 级</td><td>园区 / 安防</td><td>3</td><td>待命</td><td>97%</td><td>可支援河道巡检</td></tr>
+          <tr><td>周宁</td><td>C 级</td><td>基础巡检</td><td>2</td><td>培训中</td><td>92%</td><td>继续跟飞</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="split">
+      <div class="card"><h3>排班逻辑</h3><div class="list-lite"><div class="item">① 先根据任务场景匹配具备资质的飞手。</div><div class="item">② 再看当前任务负荷，避免单一飞手长期超载。</div><div class="item">③ 最后参考历史完成率与迟到/返工情况。</div></div></div>
+      <div class="card"><h3>班次建议</h3><div class="list-lite"><div class="item">上午：张航执行河道高优任务。</div><div class="item">下午：王策补充园区例行巡检。</div><div class="item">夜间：李舟承担市容复查任务。</div></div></div>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>如果河道巡检突然增加，系统会优先推荐 A 级飞手张航；若其负荷过高，则按照场景相近原则调配王策进行补位。</div>
+  </div>
+</main>
+</section>
+
+<section id="resource-routes" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">资源池管理 / 航线模板库</div>
+        <div class="kicker">ROUTE TEMPLATES</div>
+        <h1>航线模板库子界面</h1>
+        <p>沉淀高频巡检路线，减少重复规划，让不同部门复用成熟模板。</p>
+      </div>
+      <a class="btn" href="#resources">返回资源池</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="preview-grid">
+      <div class="preview-card"><div class="mock-thumb"></div><h3>河道 HD-04</h3><p>长度 3 公里，适合水面漂浮物、排口异常、河岸违建巡检。</p><span class="tag">低风险</span><span class="tag">免重复建线</span></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>市容 SR-02</h3><p>人民路东段，适合广告牌、占道经营、立面破损巡查。</p><span class="tag">中风险</span><span class="tag">需避让主干道</span></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>园区 YQ-01</h3><p>适合围界巡逻、夜间安防、施工点位检查。</p><span class="tag">夜航审批</span><span class="tag">安防场景</span></div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><h3>模板明细</h3><span class="tag">适用场景 / 风险等级 / 审批要求</span></div>
+      <table>
+        <thead><tr><th>模板编号</th><th>适用场景</th><th>风险等级</th><th>审批要求</th><th>最近执行</th><th>复用次数</th></tr></thead>
+        <tbody>
+          <tr><td>HD-04</td><td>河道巡检</td><td><span class="badge ok">低</span></td><td>常规巡检</td><td>07-14</td><td>26</td></tr>
+          <tr><td>SR-02</td><td>市容治理</td><td><span class="badge warn">中</span></td><td>交通路口避让</td><td>07-14</td><td>18</td></tr>
+          <tr><td>YQ-01</td><td>园区安防</td><td><span class="badge warn">中</span></td><td>夜航报备</td><td>07-13</td><td>11</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>新来的飞手不用每次重画河道路线，直接调用 HD-04 模板即可执行任务，同时保证不同部门生成的数据结构一致。</div>
+  </div>
+</main>
+</section>
+
+<section id="data-media" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">巡检数据档案库 / 影像资料</div>
+        <div class="kicker">MEDIA ARCHIVE</div>
+        <h1>影像资料子界面</h1>
+        <p>集中存放照片、视频和现场取证材料，并按任务号与工单号关联。</p>
+      </div>
+      <a class="btn" href="#data">返回数据档案</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="preview-grid">
+      <div class="preview-card"><div class="mock-thumb"></div><h3>现场照片</h3><p>按时间、区域和任务编号分类，可直接定位到隐患点位。</p></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>巡检视频</h3><p>保留原始视频和压缩预览版本，用于复核与汇报截图。</p></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>取证材料</h3><p>支持上传整改前后对比图、截图和补充说明。</p></div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><h3>影像索引</h3><span class="tag">任务号 + 工单号 + 时间戳</span></div>
+      <table>
+        <thead><tr><th>文件编号</th><th>关联任务</th><th>关联工单</th><th>资料类型</th><th>拍摄时间</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td>IMG-0714-01</td><td>LX-2026-0714-001</td><td>HY-2026-051</td><td>照片</td><td>07-14 09:20</td><td>漂浮物点位</td></tr>
+          <tr><td>VID-0714-02</td><td>LX-2026-0714-001</td><td>HY-2026-051</td><td>视频</td><td>07-14 09:22</td><td>河岸连续画面</td></tr>
+          <tr><td>IMG-0714-13</td><td>LX-2026-0714-004</td><td>HY-2026-052</td><td>整改后照片</td><td>07-14 14:10</td><td>待复查</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>老师问“这个河道漂浮物有没有证据”，只需打开 HY-2026-051 对应影像索引，就能看到原始照片、现场视频和整改后的复查照片。</div>
+  </div>
+</main>
+</section>
+
+<section id="data-location" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">巡检数据档案库 / 空间位置</div>
+        <div class="kicker">SPATIAL LOCATION</div>
+        <h1>空间位置子界面</h1>
+        <p>统一查看飞行轨迹、隐患点位和网格区域，形成时空复盘基础。</p>
+      </div>
+      <a class="btn" href="#data">返回数据档案</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="card">
+      <h3>轨迹与点位示意</h3>
+      <div class="map-panel" style="height:320px"><div class="route r1"></div><div class="route r2"></div><div class="drone d1"></div><div class="drone d2"></div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><h3>空间对象清单</h3><span class="tag">轨迹 / 点位 / 网格</span></div>
+      <table>
+        <thead><tr><th>对象编号</th><th>类型</th><th>关联任务</th><th>位置说明</th><th>更新时间</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>PT-001</td><td>隐患点位</td><td>LX-2026-0714-001</td><td>北岸 1.8km</td><td>07-14 09:20</td><td>漂浮物取证</td></tr>
+          <tr><td>TR-004</td><td>飞行轨迹</td><td>LX-2026-0714-001</td><td>HD-04 航线</td><td>07-14 09:28</td><td>飞行复盘</td></tr>
+          <tr><td>GD-011</td><td>区域网格</td><td>多任务复用</td><td>河道片区 A</td><td>07-01</td><td>统计分析</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>如果同一河段两周内反复出现漂浮物，空间位置子界面可以直接看到这些隐患是否集中在同一个网格，便于判断治理重点。</div>
+  </div>
+</main>
+</section>
+
+<section id="data-ledger" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">巡检数据档案库 / 业务台账</div>
+        <div class="kicker">BUSINESS LEDGER</div>
+        <h1>业务台账子界面</h1>
+        <p>把任务单、隐患单、整改记录和复查记录串成可追踪的完整链路。</p>
+      </div>
+      <a class="btn" href="#data">返回数据档案</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="table-card">
+      <div class="table-head"><h3>关联业务链</h3><span class="tag">任务 → 工单 → 整改 → 复查</span></div>
+      <table>
+        <thead><tr><th>任务编号</th><th>工单编号</th><th>责任方</th><th>整改动作</th><th>复查结果</th><th>归档状态</th></tr></thead>
+        <tbody>
+          <tr><td>LX-2026-0714-001</td><td>HY-2026-051</td><td>水务运维</td><td>打捞清理完成</td><td><span class="badge ok">已销号</span></td><td><span class="badge ok">已归档</span></td></tr>
+          <tr><td>LX-2026-0714-004</td><td>HY-2026-052</td><td>城管二队</td><td>限期整改中</td><td><span class="badge warn">待复查</span></td><td><span class="badge info">待归档</span></td></tr>
+          <tr><td>LX-2026-0714-006</td><td>HY-2026-058</td><td>园区物业</td><td>围界补修</td><td><span class="badge ok">已复查</span></td><td><span class="badge ok">已归档</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="split">
+      <div class="card"><h3>常用查询</h3><div class="list-lite"><div class="item">按任务编号查询关联工单与影像资料。</div><div class="item">按责任方查询本周待复查项目。</div><div class="item">按整改状态筛选尚未销号记录。</div></div></div>
+      <div class="card"><h3>价值</h3><div class="list-lite"><div class="item">避免“任务有了，但后续证据找不到”。</div><div class="item">使每一个治理结果都有来源记录。</div><div class="item">为绩效考核提供结构化台账。</div></div></div>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>当老师问“你们怎么证明平台实现了闭环”，直接展示某个任务编号在这里对应的工单、整改动作和复查结果即可。</div>
+  </div>
+</main>
+</section>
+
+<section id="data-package" class="page">
+<main class="wrapper">
+  <section class="page-title">
+    <div class="child-topbar">
+      <div>
+        <div class="breadcrumb">巡检数据档案库 / 归档包</div>
+        <div class="kicker">ARCHIVE PACKAGE</div>
+        <h1>归档包子界面</h1>
+        <p>将影像、空间位置和业务台账打包，形成可导出、可提交、可复盘的档案包。</p>
+      </div>
+      <a class="btn" href="#data">返回数据档案</a>
+    </div>
+  </section>
+  <div class="main-panel">
+    <div class="kpi-row">
+      <div class="kpi"><small>本月归档包</small><div class="value">28</div><small>按任务 / 按片区导出</small></div>
+      <div class="kpi"><small>平均完整率</small><div class="value">97%</div><small>缺失项自动提醒</small></div>
+      <div class="kpi"><small>待补资料</small><div class="value">3</div><small>多为复查照片缺失</small></div>
+      <div class="kpi"><small>已导出汇报包</small><div class="value">11</div><small>用于周报和月报</small></div>
+    </div>
+    <div class="table-card">
+      <div class="table-head"><h3>归档包清单</h3><span class="tag">完整率 / 导出状态 / 用途</span></div>
+      <table>
+        <thead><tr><th>归档包编号</th><th>关联任务</th><th>资料构成</th><th>完整率</th><th>导出状态</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>PK-2026-0714-01</td><td>LX-2026-0714-001</td><td>照片+视频+工单+复查</td><td>98%</td><td><span class="badge ok">已导出</span></td><td>河道月报</td></tr>
+          <tr><td>PK-2026-0714-06</td><td>LX-2026-0714-004</td><td>照片+工单</td><td>82%</td><td><span class="badge warn">待补齐</span></td><td>整改跟踪</td></tr>
+          <tr><td>PK-2026-0714-11</td><td>片区汇总</td><td>多任务汇总包</td><td>96%</td><td><span class="badge ok">已导出</span></td><td>季度汇报</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="preview-grid">
+      <div class="preview-card"><div class="mock-thumb"></div><h3>单任务归档包</h3><p>适合展示“某次巡检到底留下了哪些证据和结果”。</p></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>片区汇总包</h3><p>适合月度或季度复盘，直接把同一区域多次巡检整合。</p></div>
+      <div class="preview-card"><div class="mock-thumb"></div><h3>汇报导出版</h3><p>自动筛出关键照片、主要问题和核心指标，便于汇报展示。</p></div>
+    </div>
+    <div class="example-box"><strong>子界面例子：</strong>做汇报时不需要临时拼资料，直接打开“河道 7 月汇总包”，里面就有照片、工单、点位和结果摘要。</div>
+  </div>
+</main>
+</section>
+
+<footer class="footer">
+  <div class="wrapper footer-grid">
+    <div><div class="logo"><span class="logo-mark">低</span><span>低空巡检工单与运营管理系统</span></div><p style="margin-top:12px">交互增强版：每个页面都包含操作、筛选、模拟生成或示例说明。</p></div>
+    <div>打开方式：建议使用 Chrome / Edge / Safari 浏览器<br>不要用 WPS 或 Word 直接预览 HTML 源码。</div>
+  </div>
+</footer>
+<div class="toast" id="toast">操作成功</div>
+
+<script>
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function showPage(){
+  const hash=(location.hash||"#home").replace("#","");
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  const target=document.getElementById(hash)||document.getElementById("home");
+  target.classList.add("active");
+  document.querySelectorAll(".navlinks>a").forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+hash));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+window.addEventListener("hashchange",showPage);showPage();
+
+const dashData={
+ today:["18","27","94%","76%","今日任务","其中 14 项已完成","超期 3 项",[45,65,52,78,88,56]],
+ week:["86","41","92%","73%","本周任务","其中 79 项已完成","超期 6 项",[35,50,72,68,85,60]],
+ month:["128","58","94%","76%","本月任务","其中 121 项已完成","超期 9 项",[48,64,76,72,90,68]]
+};
+function setDashboard(type,btn){
+  document.querySelectorAll("#dashboard .toolbar .btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+  const d=dashData[type];document.getElementById("dashTasks").textContent=d[0];document.getElementById("dashHazards").textContent=d[1];document.getElementById("dashClose").textContent=d[2];document.getElementById("dashUse").textContent=d[3];document.getElementById("dashLabel1").textContent=d[4];document.getElementById("dashSub1").textContent=d[5];document.getElementById("dashSub2").textContent=d[6];
+  document.querySelectorAll("#dashChart .bar").forEach((bar,i)=>bar.style.height=d[7][i]+"%");
+  toast("运营总览已切换到："+d[4]);
+}
+function exportDaily(){toast("已生成当前运营摘要：任务、隐患、闭环率和设备利用率已汇总。")}
+let taskSeq=8;
+function createTask(){
+ const scene=document.getElementById("taskScene").value, pilot=document.getElementById("taskPilot").value, route=document.getElementById("taskRoute").value;
+ const tr=document.createElement("tr");tr.dataset.status="待执行";tr.innerHTML=`<td>LX-2026-0714-${String(taskSeq++).padStart(3,'0')}</td><td>${scene}</td><td>${route}</td><td>${pilot}</td><td>待匹配</td><td><span class="badge warn">待执行</span></td><td>--</td>`;
+ document.getElementById("taskBody").prepend(tr);toast("已生成新的巡检任务单，并进入待执行状态。")
+}
+function filterTask(status,btn){
+ if(btn){document.querySelectorAll("#tasks .card .btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active")}
+ document.querySelectorAll("#taskBody tr").forEach(tr=>tr.style.display=(status==="全部"||tr.dataset.status===status)?"":"none");
+ toast("任务筛选："+status);
+}
+let hazSeq=60;
+function createHazard(){
+ const type=document.getElementById("hazType").value, place=document.getElementById("hazPlace").value, level=document.getElementById("hazLevel").value, owner=document.getElementById("hazOwner").value;
+ const cls=level==="严重"?"danger":level==="较重"?"warn":"info";
+ const tr=document.createElement("tr");tr.dataset.status="待派发";tr.innerHTML=`<td>HY-2026-${hazSeq++}</td><td>${type}</td><td>${place}</td><td><span class="badge ${cls}">${level}</span></td><td>${owner}</td><td><span class="badge info">待派发</span></td><td>07-16</td>`;
+ document.getElementById("hazBody").prepend(tr);document.getElementById("hazAll").textContent=Number(document.getElementById("hazAll").textContent)+1;toast("已生成隐患工单，等待派发责任方。")
+}
+function filterHazard(status){
+ document.querySelectorAll("#hazBody tr").forEach(tr=>tr.style.display=(status==="全部"||tr.dataset.status===status)?"":"none");
+ toast("隐患工单筛选："+status);
+}
+function closeFirstHazard(){
+ const row=document.querySelector("#hazBody tr");if(row){row.dataset.status="已销号";row.children[5].innerHTML='<span class="badge ok">已销号</span>';document.getElementById("hazDone").textContent=Number(document.getElementById("hazDone").textContent)+1;toast("已完成复查销号，工单进入数据档案。")}
+}
+function filterResource(status,btn){
+ document.querySelectorAll("#resources .toolbar .btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+ document.querySelectorAll("#resBody tr").forEach(tr=>tr.style.display=(status==="全部"||tr.dataset.status===status)?"":"none");
+ toast("资源筛选："+status);
+}
+function allocateResource(){document.getElementById("resourceTag").textContent="推荐调用：DJ-12 → 河道 HD-04";toast("已推荐低负荷设备 DJ-12 执行河道巡检。")}
+let archSeq=2;
+function createArchive(){
+ const task=document.getElementById("archiveTask").value, type=document.getElementById("archiveType").value;
+ const files=document.getElementById("archiveFiles").value, rate=document.getElementById("archiveRate").value.replace("完整率 ","");
+ const tr=document.createElement("tr");tr.innerHTML=`<td>DA-2026-0714-${String(archSeq++).padStart(3,'0')}</td><td>${task}</td><td>${type}</td><td>${files}</td><td>${rate}</td><td><span class="badge ok">已归档</span></td>`;
+ document.getElementById("archiveBody").prepend(tr);toast("已生成档案包，影像、轨迹、工单和复查记录已归档。")
+}
+function setReport(period,btn){
+ document.querySelectorAll("#reports .toolbar .btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+ if(period==="本季度"){document.getElementById("repTask").textContent="93%";document.getElementById("repClose").textContent="91%";document.getElementById("repTime").textContent="3.1天";document.getElementById("repUse").textContent="72%";}
+ if(period==="试点三个月"){document.getElementById("repTask").textContent="95%";document.getElementById("repClose").textContent="92%";document.getElementById("repTime").textContent="2.9天";document.getElementById("repUse").textContent="74%";}
+ if(period==="本月"){document.getElementById("repTask").textContent="96%";document.getElementById("repClose").textContent="94%";document.getElementById("repTime").textContent="2.8天";document.getElementById("repUse").textContent="76%";}
+ toast("报表周期已切换到："+period);
+}
+function generateReport(){
+ document.getElementById("reportText").textContent=`本周期系统共完成巡检任务 ${document.getElementById("repTask").textContent}，隐患整改闭环率为 ${document.getElementById("repClose").textContent}，平均处置时长 ${document.getElementById("repTime").textContent}，设备利用率 ${document.getElementById("repUse").textContent}。建议优先处理超期隐患，并继续提升低负荷设备跨场景调用比例。`;
+ toast("报告摘要已生成，可复制到汇报材料。")
+}
+function calcPrice(){
+ const base=Number(document.getElementById("clientType").value), add=Number(document.getElementById("featureLevel").value), total=base+add;
+ document.getElementById("priceResult").textContent=`建议报价：${total} 万元左右`;
+ toast("已根据客户类型和功能需求生成建议报价。")
+}
+</script>
+</body>
+</html>
